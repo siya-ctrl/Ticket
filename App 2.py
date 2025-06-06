@@ -38,7 +38,7 @@ def main():
     if "ticket" in query_params:
         receipt_number = query_params["ticket"][0]
         st.write(f"Download your ticket: #{receipt_number}")
-        show_download(receipt_number)s
+        show_download(receipt_number)
         st.write("Share this link with your customer:")
         url = f"{base_url}?ticket={receipt_number}"
         st.text(url)
