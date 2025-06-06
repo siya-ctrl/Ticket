@@ -8,7 +8,7 @@ os.makedirs(TICKET_FOLDER, exist_ok=True)
 st.set_page_config(page_title="Shahaji Tours - Ticket Download", layout="centered")
 
 # Base URL of your deployed Streamlit app
-BASE_URL = "https://your-streamlit-app-name.streamlit.app"  # Replace with your actual deployed URL
+BASE_URL = "https://ticket-abkrvbzmpjwqva7jhqgdcw.streamlit.app/"  # Replace with your actual deployed URL
 
 # --- Function to serve download button ---
 def show_download(receipt_number):
