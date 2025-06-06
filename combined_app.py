@@ -8,7 +8,7 @@ import os
 st.set_page_config(page_title="Shahaji Tours - Ticket System", layout="centered")
 TICKET_FOLDER = "tickets_data"
 os.makedirs(TICKET_FOLDER, exist_ok=True)
-BASE_URL = "https://your-streamlit-app-name.streamlit.app"  # Replace this!
+BASE_URL = "https://ticket-ncdd5jogjjgcpbwxuoctuf.streamlit.app/"  # Replace this!
 
 # Receipt number file handling
 def get_next_receipt_no():
