@@ -12,7 +12,7 @@ BASE_URL = "https://ticket-abkrvbzmpjwqva7jhqgdcw.streamlit.app/"  # Replace wit
 
 # --- Function to serve download button ---
 def show_download(receipt_number):
-    file_path = os.path.join(TICKET_FOLDER, f"ticket_{receipt_number}.pdf")
+    file_path = os.path.join(tickets, f"ticket_{receipt_number}.pdf")
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
             data = f.read()
