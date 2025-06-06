@@ -6,14 +6,30 @@ import base64
 import urllib.parse
 import os
 
-# Streamlit page config must be first command after imports
+# Config
 st.set_page_config(page_title="Shahaji Tours - Ticket Generator", layout="centered")
+TICKET_FOLDER = "tickets"
+os.makedirs(TICKET_FOLDER, exist_ok=True)
 
-# Initialize receipt no in session_state for auto-increment
+BASE_URL = "https://your-streamlit-app-name.streamlit.app"  # Replace with your actual deployed app URL
+
+# --- Auto-increment logic ---
+def get_next_receipt_no():
+    file_path = "receipt_number.txt"
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            current = int(f.read())
+    else:
+        current = 1000
+    next_receipt = current + 1
+    with open(file_path, "w") as f:
+        f.write(str(next_receipt))
+    return current
+
 if "receipt_no" not in st.session_state:
-    st.session_state.receipt_no = 1000  # Starting receipt number
+    st.session_state.receipt_no = get_next_receipt_no()
 
-# PDF generation class
+# PDF class
 class ShahajiPDF(FPDF):
     def header(self):
         self.set_font("Arial", 'B', 16)
@@ -22,13 +38,13 @@ class ShahajiPDF(FPDF):
     def footer(self):
         pass
 
+# UI
 st.title("🚌 Shahaji Tours and Travels Karad - Ticket Generator")
 
 with st.form("ticket_form"):
     st.subheader("Enter Ticket Details")
 
     col1, col2 = st.columns(2)
-
     with col1:
         customer_name = st.text_input("Customer Name")
         from_location = st.text_input("From")
@@ -48,37 +64,32 @@ with st.form("ticket_form"):
         bus_number = st.text_input("Bus Number")
 
     st.write(f"Receipt No.: **{st.session_state.receipt_no}**")
-
     submitted = st.form_submit_button("Generate Ticket")
 
+# --- Generate PDF ---
 if submitted:
     balance_amount = total_amount - advance_amount
+    receipt_no = st.session_state.receipt_no
 
     pdf = ShahajiPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
 
-    margin_x = 10
-    margin_y = 20
-    box_width = 190
-    box_height = 200
+    margin_x, margin_y = 10, 20
+    box_width, box_height = 190, 200
     pdf.rect(margin_x, margin_y, box_width, box_height)
 
-    # Receipt No and Customer Name right aligned top-right inside box
     pdf.set_xy(margin_x + box_width - 70, margin_y + 5)
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(70, 10, f"Receipt No.: {st.session_state.receipt_no}", align='R', ln=True)
+    pdf.cell(70, 10, f"Receipt No.: {receipt_no}", align='R', ln=True)
 
-    # Title centered below top margin in bold
     pdf.set_xy(margin_x, margin_y)
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(box_width - 10, 10, "Shahaji Tours and Travels Karad", ln=True, align='C')
 
-    # Ticket Details title bold
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, "Ticket Details:", ln=True)
 
-    # Ticket details with bold labels and normal values
     def write_bold_label_value(label, value):
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(40, 8, f"{label}:", ln=False)
@@ -99,11 +110,8 @@ if submitted:
     write_bold_label_value("Issue Date", issue_date.strftime('%d/%m/%Y'))
 
     pdf.ln(5)
-
-    # Payment Details title bold
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 10, "Payment Details:", ln=True)
-
     write_bold_label_value("Total Amount", f"Rs. {total_amount}")
     write_bold_label_value("Advance", f"Rs. {advance_amount}")
     write_bold_label_value("Balance", f"Rs. {balance_amount}")
@@ -116,38 +124,34 @@ if submitted:
     pdf.cell(0, 10, "Booked By : Shahaji Tours and Travels Karad", ln=True)
     pdf.multi_cell(0, 10, "Address: Shop No 5, Jagdale Complex, Opp.Hotel Pankaj, P.B.Road, Karad. Mob:8055323258")
 
-    # Save PDF to temp file
-    tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf.output(tmp_file.name)
-    tmp_file.close()  # Close the file handle to release it
+    # Save to file
+    filename = f"ticket_{receipt_no}.pdf"
+    filepath = os.path.join(TICKET_FOLDER, filename)
+    pdf.output(filepath)
 
-    # Read PDF bytes
-    with open(tmp_file.name, "rb") as file:
-        pdf_bytes = file.read()
+    # Show download button
+    with open(filepath, "rb") as file:
+        pdf_data = file.read()
+        st.download_button(
+            label="📥 Download Ticket PDF",
+            data=pdf_data,
+            file_name=filename,
+            mime="application/pdf",
+        )
 
-    # Delete temp file after reading
-    os.unlink(tmp_file.name)
-
-    # Prepare download link for PDF
-    b64_pdf = base64.b64encode(pdf_bytes).decode()
-    download_filename = f"ticket_{st.session_state.receipt_no}.pdf"
-    href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{download_filename}">📥 Download Ticket PDF</a>'
-    st.markdown(href, unsafe_allow_html=True)
-
-    # WhatsApp share message (text only, no direct PDF attachment possible)
+    # WhatsApp message with download link
+    ticket_url = f"{BASE_URL}?ticket={receipt_no}"
     message = (
         f"Hello {customer_name}, your ticket is ready.\n"
         f"From: {from_location} To: {to_location}\n"
         f"Date: {journey_date.strftime('%d/%m/%Y')} | Seats: {seat_numbers}\n"
         f"Balance to pay: Rs. {balance_amount}\n\n"
-        f"Please download your ticket from the link sent."
+        f"Download your ticket: {ticket_url}"
     )
     wa_url = f"https://wa.me/?text={urllib.parse.quote(message)}"
     st.markdown(f"[📤 Share Ticket Info via WhatsApp]({wa_url})", unsafe_allow_html=True)
 
     st.success("✅ Ticket generated successfully!")
 
-    # Increment receipt number only AFTER successful ticket generation
-    st.session_state.receipt_no += 1
-
-
+    # Increment for next use
+    st.session_state.receipt_no = get_next_receipt_no()
