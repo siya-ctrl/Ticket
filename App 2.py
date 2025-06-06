@@ -1,18 +1,15 @@
 import streamlit as st
 import os
 
-TICKET_FOLDER = "tickets"
-os.makedirs(TICKET_FOLDER, exist_ok=True)
-
-# Streamlit page config
+# Configuration
 st.set_page_config(page_title="Shahaji Tours - Ticket Download", layout="centered")
+TICKET_FOLDER = "tickets_data"
+os.makedirs(TICKET_FOLDER, exist_ok=True)
+BASE_URL = "https://ticket-nymczx8uq5mejpxxfu9rnn.streamlit.app/"  # Replace with actual deployed app URL
 
-# Base URL of your deployed Streamlit app
-BASE_URL = "https://ticket-abkrvbzmpjwqva7jhqgdcw.streamlit.app/"  # Replace with your actual deployed URL
-
-# --- Function to serve download button ---
+# Download function
 def show_download(receipt_number):
-    file_path = os.path.join(tickets, f"ticket_{receipt_number}.pdf")
+    file_path = os.path.join(TICKET_FOLDER, f"ticket_{receipt_number}.pdf")
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
             data = f.read()
@@ -25,26 +22,22 @@ def show_download(receipt_number):
     else:
         st.error("❌ Ticket not found.")
 
-# --- Main ---
+# Main app
 def main():
     st.title("📤 Shahaji Tours - Download Your Ticket")
-
     query_params = st.query_params
 
     if "ticket" in query_params:
         receipt_number = query_params["ticket"][0]
         st.markdown(f"### 🧾 Receipt No: **{receipt_number}**")
-        st.markdown("👇 Click below to download your ticket:")
         show_download(receipt_number)
 
         share_url = f"{BASE_URL}?ticket={receipt_number}"
         st.markdown("📎 Share this link with your customer:")
         st.code(share_url)
     else:
-        st.info("ℹ️ This page lets users download their tickets using a link.")
-        st.write("To test manually, enter a receipt number below:")
-
-        receipt_number = st.text_input("Receipt Number (e.g., 1001)")
+        st.info("ℹ️ Use a receipt number to download the ticket below.")
+        receipt_number = st.text_input("Enter Receipt Number")
         if st.button("Download Ticket"):
             show_download(receipt_number)
 
