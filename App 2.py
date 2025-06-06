@@ -31,14 +31,16 @@ def show_download(receipt_number):
 def main():
     st.title("Ticket Generator")
 
-    # Check if ticket receipt_number is in query params
-    query_params = st.experimental_get_query_params()
+    # Replace with your deployed Streamlit app URL, e.g.:
+    base_url = "https://ticket-abkrvbzmpjwqva7jhqgdcw.streamlit.app/"  # <--- SET THIS!
+
+    query_params = st.query_params
     if "ticket" in query_params:
         receipt_number = query_params["ticket"][0]
         st.write(f"Download your ticket: #{receipt_number}")
-        show_download(receipt_number)
+        show_download(receipt_number)s
         st.write("Share this link with your customer:")
-        url = st.get_url() + f"?ticket={receipt_number}"
+        url = f"{base_url}?ticket={receipt_number}"
         st.text(url)
         return
 
@@ -49,7 +51,7 @@ def main():
         st.success(f"Ticket #{receipt_number} generated!")
         st.write("You can download the ticket here:")
         show_download(receipt_number)
-        url = st.get_url() + f"?ticket={receipt_number}"
+        url = f"{base_url}?ticket={receipt_number}"
         st.write("Or share this link with your customer to download the ticket:")
         st.text(url)
 
