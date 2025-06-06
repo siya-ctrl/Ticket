@@ -1,59 +1,52 @@
 import streamlit as st
 import os
-from fpdf import FPDF
 
 TICKET_FOLDER = "tickets"
 os.makedirs(TICKET_FOLDER, exist_ok=True)
 
-def generate_ticket(receipt_number):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Ticket Receipt Number: {receipt_number}", ln=True)
-    file_path = os.path.join(TICKET_FOLDER, f"ticket_{receipt_number}.pdf")
-    pdf.output(file_path)
-    return file_path
+# Streamlit page config
+st.set_page_config(page_title="Shahaji Tours - Ticket Download", layout="centered")
 
+# Base URL of your deployed Streamlit app
+BASE_URL = "https://your-streamlit-app-name.streamlit.app"  # Replace with your actual deployed URL
+
+# --- Function to serve download button ---
 def show_download(receipt_number):
     file_path = os.path.join(TICKET_FOLDER, f"ticket_{receipt_number}.pdf")
     if os.path.exists(file_path):
         with open(file_path, "rb") as f:
             data = f.read()
         st.download_button(
-            label=f"Download Ticket #{receipt_number}",
+            label=f"📥 Download Ticket #{receipt_number}",
             data=data,
             file_name=f"ticket_{receipt_number}.pdf",
             mime="application/pdf",
         )
     else:
-        st.error("Ticket not found.")
+        st.error("❌ Ticket not found.")
 
+# --- Main ---
 def main():
-    st.title("Ticket Generator")
-
-    # Replace with your deployed Streamlit app URL, e.g.:
-    base_url = "https://ticket-abkrvbzmpjwqva7jhqgdcw.streamlit.app/"  # <--- SET THIS!
+    st.title("📤 Shahaji Tours - Download Your Ticket")
 
     query_params = st.query_params
+
     if "ticket" in query_params:
         receipt_number = query_params["ticket"][0]
-        st.write(f"Download your ticket: #{receipt_number}")
+        st.markdown(f"### 🧾 Receipt No: **{receipt_number}**")
+        st.markdown("👇 Click below to download your ticket:")
         show_download(receipt_number)
-        st.write("Share this link with your customer:")
-        url = f"{base_url}?ticket={receipt_number}"
-        st.text(url)
-        return
 
-    # Normal ticket generation page
-    receipt_number = st.text_input("Enter Receipt Number", value="1001")
-    if st.button("Generate Ticket PDF"):
-        file_path = generate_ticket(receipt_number)
-        st.success(f"Ticket #{receipt_number} generated!")
-        st.write("You can download the ticket here:")
-        show_download(receipt_number)
-        url = f"{base_url}?ticket={receipt_number}"
-        st.write("Or share this link with your customer to download the ticket:")
-        st.text(url)
+        share_url = f"{BASE_URL}?ticket={receipt_number}"
+        st.markdown("📎 Share this link with your customer:")
+        st.code(share_url)
+    else:
+        st.info("ℹ️ This page lets users download their tickets using a link.")
+        st.write("To test manually, enter a receipt number below:")
+
+        receipt_number = st.text_input("Receipt Number (e.g., 1001)")
+        if st.button("Download Ticket"):
+            show_download(receipt_number)
 
 if __name__ == "__main__":
     main()
